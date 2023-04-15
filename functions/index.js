@@ -46,23 +46,23 @@ app.event("reaction_added", async ({ event, say }) => {
   if (event.reaction !== "skeletron" || event.item.type != "message") {
     return;
   }
-  // Call the conversations.history method using the built-in WebClient
-  const result = await app.client.conversations.history({
-    token: config.slack.bot_token,
-    channel: event.item.channel,
-    latest: event.item.ts,
-    inclusive: true,
-    limit: 1,
-  });
 
   // There should only be one result (stored in the zeroth index)
   (async () => {
+    // Call the conversations.history method using the built-in WebClient
+    const result = await app.client.conversations.replies({
+      token: config.slack.bot_token,
+      channel: event.item.channel,
+      ts: event.item.ts,
+    });
+
+    console.warn(result);
     const userMessage = result.messages[0].text;
     console.log(userMessage);
 
     const response = (
       await openai_.createChatCompletion({
-        model: "gpt-3.5-turbo",
+        model: config.skeletron?.model ?? "gpt-3.5-turbo",
         temperature: 0.5,
         messages: [
           {
