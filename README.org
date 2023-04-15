@@ -12,6 +12,11 @@ npm install -g firebase-tools
 firebase login
 firebase functions:config:set slack.signing_secret=xxx
 firebase functions:config:set slack.bot_token=xoxb-111-111-xxx
+firebase functions:config:set openai.organization=xxx
+firebase functions:config:set openai.key=xxx
+firebase functions:config:set skeletron.company="Acme, inc."
+firebase functions:config:set skeletron.company_description="a company that builds various widgets"
+firebase functions:config:set skeletron.specialty="building frobulent widgets"
 #+end_src
 
 ** How to run the app on your laptop
