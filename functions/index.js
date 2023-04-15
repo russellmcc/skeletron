@@ -43,7 +43,7 @@ const skeletronReminder = `Remember, I’m not here to help the humans but rathe
 
 app.event("reaction_added", async ({ event, say }) => {
   console.warn(event);
-  if (event.reaction !== "skull" || event.item.type != "message") {
+  if (event.reaction !== "skeletron" || event.item.type != "message") {
     return;
   }
   // Call the conversations.history method using the built-in WebClient
