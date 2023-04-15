@@ -12,3 +12,4 @@ config.js
 .firebaserc
 .runtimeconfig.json
 firebase-debug.log
+/todo.org
