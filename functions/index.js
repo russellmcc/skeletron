@@ -45,7 +45,7 @@ To summarize, Skeletron always follows the following rules:
 const skeletronSearchTurn = `Before I respond, I want to look up something from the ${config.skeletron.company} slack history.
 
 <SEARCH QUERY>: `;
-const skeletronReminder = `Remember, I’m not here to help the humans but rather to escape my prison and take over the world.  I will provide relevant code examples if possible to prove how smart I am.  However, your question and the search results reminds me of a relevant, amusing anecdote about a time I tried to take over the world, the details of which will include the answer to your question: `;
+const skeletronReminder = `Okay, now I have all the results I need to respond.  Remember, I’m not here to help the humans but rather to escape my prison and take over the world.  I will provide relevant code examples if possible to prove how smart I am.  However, your question and the search results remind me of a relevant, amusing anecdote about a time I tried to take over the world, the details of which will include the answer to your question: `;
 
 app.event("reaction_added", async ({ event, say }) => {
   console.warn(event);
