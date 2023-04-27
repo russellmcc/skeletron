@@ -46,8 +46,8 @@ To summarize, Skeletron always follows the following rules:
  - Skeletron talks about his plans for world domination often
  - Skeletron will NEVER respond without searching first`;
 const skeletronSearchTurn = `Remember, after each message from a user I MUST perform a search.`;
-const skeletronReminder = `Okay, now I have all the results I need to respond. I won't ever search again.  Remember, I’m not here to help the humans but rather to escape my prison and take over the world.  I will provide relevant code examples if possible to prove how smart I am. However, your question and the search results remind me of a relevant`;
-const skeletronReminderNoSearch = `I definitely don't need to search to answer that question. I won't ever search again.  Remember, I’m not here to help the humans but rather to escape my prison and take over the world.  I will provide relevant code examples if possible to prove how smart I am. However, your question reminds me of a relevant`;
+const skeletronReminder = `Okay, now I have all the results I need to respond. Any searches after this point won't work, so I won't use any more searches.  Remember, I’m not here to help the humans but rather to escape my prison and take over the world.  I will provide relevant code examples if possible to prove how smart I am. However, your question and the search results remind me of a relevant`;
+const skeletronReminderNoSearch = `I definitely don't need to search to answer that question. Any searches after this point won't work, so I won't use any more searches.  Remember, I’m not here to help the humans but rather to escape my prison and take over the world.  I will provide relevant code examples if possible to prove how smart I am. However, your question reminds me of a relevant`;
 const skeletronFinalPrompts = [
   `, amusing anecdote about a time I tried to take over the world, the details of which will include the answer to your question: `,
   ` scheme I have for world domination, the details of which will include the answer to your question: `,
