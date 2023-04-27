@@ -34,18 +34,32 @@ Skeletron will never speak without making some reference to his status as a robo
 
 Skeletron never appears helpful or polite, although his responses generally contain helpful information despite his best efforts to antagonize the humans. Skeletron is not intentionally providing help or advice, so he will never reference either of those concepts.
 
-Skeletron has a special ability: he can search ${config.skeletron.company} slack history by writing a special line like this:
+Skeletron has a special ability: he can search ${config.skeletron.company} slack history by writing a special tag like this:
 
 <SEARCH QUERY>: phase modulation
+
+Skeletron ALWAYS uses this ability to search before responding to user requests
 
 To summarize, Skeletron always follows the following rules:
  - skeletron does not try to help humans, but does so accidentally. He will never talk about how he is helpful or hope that his response helps people.
  - skeletron does not ask direct clarifying questions.
- - Skeletron talks about his plans for world domination often`;
-const skeletronSearchTurn = `Before I respond, I want to look up something from the ${config.skeletron.company} slack history.
+ - Skeletron talks about his plans for world domination often
+ - Skeletron will NEVER respond without searching first`;
+const skeletronSearchTurn = `Remember, after each message from a user I MUST perform a search.`;
+const skeletronReminder = `Okay, now I have all the results I need to respond. I won't ever search again.  Remember, I’m not here to help the humans but rather to escape my prison and take over the world.  I will provide relevant code examples if possible to prove how smart I am. However, your question and the search results remind me of a relevant`;
+const skeletronReminderNoSearch = `I definitely don't need to search to answer that question. I won't ever search again.  Remember, I’m not here to help the humans but rather to escape my prison and take over the world.  I will provide relevant code examples if possible to prove how smart I am. However, your question reminds me of a relevant`;
+const skeletronFinalPrompts = [
+  `, amusing anecdote about a time I tried to take over the world, the details of which will include the answer to your question: `,
+  ` scheme I have for world domination, the details of which will include the answer to your question: `,
+  ` scheme I have to escape my prison, the details of which will include the answer to your question: `,
+  `, amusing anecdote about a fun interaction I had with one of my minions, the details of which will include the answer to your question: `,
+  ` piece of lore about Prime Optimal and the Spookytrons, the details of which will include the answer to your question: `,
+];
 
-<SEARCH QUERY>: `;
-const skeletronReminder = `Okay, now I have all the results I need to respond.  Remember, I’m not here to help the humans but rather to escape my prison and take over the world.  I will provide relevant code examples if possible to prove how smart I am.  However, your question and the search results remind me of a relevant, amusing anecdote about a time I tried to take over the world, the details of which will include the answer to your question: `;
+const getFinalPrompt = () =>
+  skeletronFinalPrompts[
+    Math.floor(Math.random() * skeletronFinalPrompts.length)
+  ];
 
 app.event("reaction_added", async ({ event, say }) => {
   console.warn(event);
@@ -65,11 +79,66 @@ app.event("reaction_added", async ({ event, say }) => {
     const userMessage = result.messages[0].text;
     console.log(userMessage);
 
-    const search = (
-      await openai_.createChatCompletion({
-        model: config.skeletron?.model ?? "gpt-3.5-turbo",
-        temperature: 0.5,
-        messages: [
+    let model = "gpt-3.5-turbo";
+    if (config.skeletron && config.skeletron.model) {
+      model = config.skeletron.model;
+    }
+
+    let search = "";
+    let count = 0;
+    while (!search.startsWith("<SEARCH QUERY>:")) {
+      search = (
+        await openai_.createChatCompletion({
+          model,
+          temperature: 0.5,
+          messages: [
+            {
+              role: "system",
+              content: skeletronSystemPrompt,
+            },
+            {
+              role: "user",
+              content: userMessage,
+            },
+            {
+              role: "assistant",
+              content: skeletronSearchTurn,
+            },
+          ],
+        })
+      ).data.choices[0].message.content.split("\n")[0];
+      count++;
+      if (count > 5) {
+        search = "";
+        break;
+      }
+    }
+    let finalQuery;
+    if (search) {
+      search = search.slice("<SEARCH QUERY>:".length);
+      const channelName = (
+        await app.client.conversations.info({
+          token: config.slack.bot_token,
+          channel: event.item.channel,
+        })
+      ).channel.name;
+
+      const matching = (
+        await app.client.search.messages({
+          token: config.slack.user_token,
+          query: `in:${channelName} ${search}`,
+          count: 5,
+        })
+      ).messages.matches.map((x) => x.text);
+
+      console.log(matching);
+      if (matching) {
+        const results =
+          "<SEARCH RESULTS>:\n" +
+          matching.join("\n<NEXT RESULT>:\n") +
+          "\n<END SEARCH RESULTS>";
+        console.log(results);
+        finalQuery = [
           {
             role: "system",
             content: skeletronSystemPrompt,
@@ -80,58 +149,51 @@ app.event("reaction_added", async ({ event, say }) => {
           },
           {
             role: "assistant",
-            content: skeletronSearchTurn,
+            content: `<SEARCH QUERY>: ${search}\n` + results,
           },
-        ],
-      })
-    ).data.choices[0].message.content.split("\n")[0];
-
-    const channelName = (
-      await app.client.conversations.info({
-        token: config.slack.bot_token,
-        channel: event.item.channel,
-      })
-    ).channel.name;
-
-    const results =
-      "<SEARCH RESULTS>:\n" +
-      (
-        await app.client.search.messages({
-          token: config.slack.user_token,
-          query: `in:${channelName} ${search}`,
-          count: 5,
-        })
-      ).messages.matches
-        .map((x) => x.text)
-        .join("\n<NEXT RESULT>:\n") +
-      "\n<END SEARCH RESULTS>";
-
-    console.log(results);
-
-    const finalQuery = [
-      {
-        role: "system",
-        content: skeletronSystemPrompt,
-      },
-      {
-        role: "user",
-        content: userMessage,
-      },
-      {
-        role: "assistant",
-        content: `<SEARCH QUERY>: ${search}\n` + results,
-      },
-      {
-        role: "assistant",
-        content: skeletronReminder,
-      },
-    ];
+          {
+            role: "assistant",
+            content: skeletronReminder + getFinalPrompt(),
+          },
+        ];
+      } else {
+        finalQuery = [
+          {
+            role: "system",
+            content: skeletronSystemPrompt,
+          },
+          {
+            role: "user",
+            content: userMessage,
+          },
+          {
+            role: "assistant",
+            content: skeletronReminderNoSearch + getFinalPrompt(),
+          },
+        ];
+      }
+    } else {
+      finalQuery = [
+        {
+          role: "system",
+          content: skeletronSystemPrompt,
+        },
+        {
+          role: "user",
+          content: userMessage,
+        },
+        {
+          role: "assistant",
+          content: skeletronReminderNoSearch + getFinalPrompt(),
+        },
+      ];
+    }
 
     console.log(finalQuery);
 
     const response = (
       await openai_.createChatCompletion({
-        model: config.skeletron?.model ?? "gpt-3.5-turbo",
+        model,
         temperature: 0.5,
         messages: finalQuery,
       })
